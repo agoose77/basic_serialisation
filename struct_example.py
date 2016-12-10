@@ -95,8 +95,9 @@ class SomeStruct(Struct):
 
 
 if __name__ == '__main__':
-    # Install modifier for the SerialisableExample class
-    modifiers = [VectorModifier, StructModifierBase.build(SomeStruct)]
+    # Build list of modifiers for all Struct subclasses
+    struct_modifiers = list(map(StructModifierBase.build, Struct.__subclasses__()))
+    modifiers = [VectorModifier] + struct_modifiers
 
     # Something to serialise
     serialisable = SomeStruct()
