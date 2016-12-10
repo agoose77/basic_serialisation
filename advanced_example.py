@@ -20,18 +20,36 @@ class VectorModifier(Modifier):
     name = 'vec'
     modifies = Vector
 
-    @staticmethod
-    def compose(stream):
+    @classmethod
+    def compose(cls, stream):
         x = stream.read('x')
         y = stream.read('y')
         z = stream.read('z')
         return Vector(x, y, z)
 
-    @staticmethod
-    def decompose(value, stream):
+    @classmethod
+    def decompose(cls, value, stream):
         stream.write('x', value.x)
         stream.write('y', value.y)
         stream.write('z', value.z)
+
+
+class StructModifierBase(Modifier):
+
+    @classmethod
+    def compose(cls, stream):
+        struct = cls.modifies()
+        struct.read(stream)
+        return struct
+
+    @classmethod
+    def decompose(cls, value, stream):
+        value.write(stream)
+
+    @classmethod
+    def build(cls, modifies_cls):
+        cls_dict = dict(modifies=modifies_cls, name=modifies_cls.__name__)
+        return type('{}Modifier'.format(modifies_cls.__name__), (cls,), cls_dict)
 
 
 class SerialisableExample:
@@ -59,7 +77,8 @@ class SerialisableExample:
 
 
 if __name__ == '__main__':
-    modifiers = [VectorModifier]
+    # Install modifier for the SerialisableExample class
+    modifiers = [VectorModifier, StructModifierBase.build(SerialisableExample)]
 
     # Something to serialise
     serialisable = SerialisableExample()
@@ -70,7 +89,8 @@ if __name__ == '__main__':
 
     # Write to a write_stream
     write_stream = WriteStream(modifiers=modifiers)
-    serialisable.write(write_stream)
+    # We can do this (below) because we created a modifier that decomposes / composes this class
+    write_stream.write('some_serialisable', serialisable)
 
     # Create stream IO with string object
     string_file = StringIO()
@@ -87,17 +107,6 @@ if __name__ == '__main__':
     string_file.seek(0)
     read_stream = stream_io.load(modifiers=modifiers)
 
-    # Print before load
-    print("\nSaved serialisable:")
-    serialisable.print()
-    del serialisable
-
-    # Now print a clean serialisable
-    serialisable = SerialisableExample()
-    print("\nNew serialisable:")
-    serialisable.print()
-
-    # Print results of load
-    serialisable.read(read_stream)
-    print("\nLoaded serialisable:")
-    serialisable.print()
+    # Read directly from stream
+    serialisable_2 = read_stream.read('some_serialisable')
+    serialisable_2.print()

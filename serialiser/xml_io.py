@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
-from stream import ReadStream
-from stream_io import StreamFileIOBase
+from .stream import ReadStream
+from .stream_io import StreamFileIOBase
+
 from ast import literal_eval
 from collections import OrderedDict
 

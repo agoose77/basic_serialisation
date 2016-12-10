@@ -1,5 +1,5 @@
-from stream import ReadStream
-from stream_io import StreamFileIOBase
+from .stream import ReadStream
+from .stream_io import StreamFileIOBase
 
 from json import dump, load
 

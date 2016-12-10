@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod, abstractstaticmethod, abstractproperty
-from collections import namedtuple
+from abc import ABC, abstractclassmethod, abstractproperty
 
 
 basic_types = (str, int, bool, float, complex, type(None))
@@ -11,12 +10,12 @@ class Modifier(ABC):
     name = abstractproperty()
     modifies = abstractproperty()
 
-    @abstractstaticmethod
-    def decompose(value, stream):
+    @abstractclassmethod
+    def decompose(cls, value, stream):
         pass
 
-    @abstractstaticmethod
-    def compose(stream):
+    @abstractclassmethod
+    def compose(cls, stream):
         pass
 
 
