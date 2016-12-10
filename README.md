@@ -5,3 +5,4 @@ Adding support for custom types depends upon the object. You might consider havi
 To avoid this, be explicit. Just call the serialise method yourself.
 
 There are XML and JSON serialisers given as an example. Custom implicit serialisers are defined using "modifiers", which associate with a class type (see `stream.Modifier` abstract base class). An example is given of using a stream Modifier for serialising Vectors (in this case, my own class, but analogous to the Blender `mathutils.Vector` class).
+In the `advanced_example.py`, a modifier is used to enable classes to be written directly to the stream (inverting the relationship). This is not necessarily the best practice, but it is a proof of concept.
