@@ -1,18 +1,16 @@
-from stream import StreamIOBase, Stream
+from stream import ReadStream
+from stream_io import StreamFileIOBase
+
 from json import dump, load
 
 
-class JSONStreamIO(StreamIOBase):
-
-    def __init__(self, file, encoder=None, decoder=None):
-        self._file = file
-        self._encoder = encoder
-        self._decoder = decoder
+class JSONStreamIO(StreamFileIOBase):
 
     def dump(self, stream):
         as_dict = stream._data
-        dump(as_dict, self._file, cls=self._encoder)
+        dump(as_dict, self._file)
 
-    def load(self):
-        data = load(self._file, object_hook=self._decoder)
-        return Stream(data)
+    def load(self, **kwargs):
+        raw_data = load(self._file)
+
+        return ReadStream(raw_data, **kwargs)
