@@ -5,6 +5,7 @@ from pprint import pprint
 
 
 class StructBuilder(type):
+    """Adds "_fields" member to structs, and sets values to default on construction"""
 
     def __init__(cls, name, bases, attrs):
         fields = dict(getmembers(cls, lambda x: isinstance(x, Field)))
@@ -21,6 +22,7 @@ class StructBuilder(type):
 
 
 class Field:
+    """Named and typed Struct member"""
 
     def __init__(self, type_):
         self.type = type_
@@ -58,13 +60,14 @@ class StructModifierBase(Modifier):
 
 
 class SomeStruct(Struct):
+    """Struct with score, name, age fields."""
     score = Field(float)
     name = Field(str)
     age = Field(int)
 
 
 if __name__ == '__main__':
-    # Build list of modifiers for all Struct subclasses
+    # Build list of modifiers for all Struct subclasses (list of the results of calling StructModifierBase.build on each struct subclass)
     modifiers = list(map(StructModifierBase.build, Struct.__subclasses__()))
     modifier_manager = ModifierManager(modifiers=modifiers)
 
