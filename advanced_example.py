@@ -1,18 +1,8 @@
-from serialiser import WriteStream, Modifier, JSONStreamIO, XMLStreamIO
+from serialiser import WriteStream, Modifier, JSONStreamIO, XMLStreamIO, ModifierManager
 from io import StringIO
 
 from pprint import pprint
-
-
-class Vector:
-
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-
-    def __repr__(self):
-        return "Vector(x={}, y={}, z={})".format(self.x, self.y, self.z)
+from vector import Vector
 
 
 class VectorModifier(Modifier):
@@ -21,14 +11,14 @@ class VectorModifier(Modifier):
     modifies = Vector
 
     @classmethod
-    def compose(cls, stream):
+    def compose(cls, stream, ctx):
         x = stream.read('x')
         y = stream.read('y')
         z = stream.read('z')
         return Vector(x, y, z)
 
     @classmethod
-    def decompose(cls, value, stream):
+    def decompose(cls, value, stream, ctx):
         stream.write('x', value.x)
         stream.write('y', value.y)
         stream.write('z', value.z)
@@ -37,13 +27,13 @@ class VectorModifier(Modifier):
 class StructModifierBase(Modifier):
 
     @classmethod
-    def compose(cls, stream):
+    def compose(cls, stream, ctx):
         struct = cls.modifies()
         struct.read(stream)
         return struct
 
     @classmethod
-    def decompose(cls, value, stream):
+    def decompose(cls, value, stream, ctx):
         value.write(stream)
 
     @classmethod
@@ -77,8 +67,11 @@ class SerialisableExample:
 
 
 if __name__ == '__main__':
+    modifier_manager = ModifierManager()
+    # Install modifier for the Vector class
+    modifier_manager.add_modifier(VectorModifier)
     # Install modifier for the SerialisableExample class
-    modifiers = [VectorModifier, StructModifierBase.build(SerialisableExample)]
+    modifier_manager.add_modifier(StructModifierBase.build(SerialisableExample))
 
     # Something to serialise
     serialisable = SerialisableExample()
@@ -88,7 +81,7 @@ if __name__ == '__main__':
     serialisable.score = 99
 
     # Write to a write_stream
-    write_stream = WriteStream(modifiers=modifiers)
+    write_stream = WriteStream(modifier_manager=modifier_manager)
     # We can do this (below) because we created a modifier that decomposes / composes this class
     write_stream.write('some_serialisable', serialisable)
 
@@ -105,7 +98,7 @@ if __name__ == '__main__':
 
     # Reload from data file
     string_file.seek(0)
-    read_stream = stream_io.load(modifiers=modifiers)
+    read_stream = stream_io.load(modifier_manager=modifier_manager)
 
     # Read directly from stream
     serialisable_2 = read_stream.read('some_serialisable')

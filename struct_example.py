@@ -1,37 +1,7 @@
-from serialiser import WriteStream, Modifier, JSONStreamIO, XMLStreamIO
+from serialiser import WriteStream, Modifier, JSONStreamIO, XMLStreamIO, ModifierManager
 from io import StringIO
 from inspect import getmembers
 from pprint import pprint
-
-
-class Vector:
-
-    def __init__(self, x=0, y=0, z=0):
-        self.x = x
-        self.y = y
-        self.z = z
-
-    def __repr__(self):
-        return "Vector(x={}, y={}, z={})".format(self.x, self.y, self.z)
-
-
-class VectorModifier(Modifier):
-
-    name = 'vec'
-    modifies = Vector
-
-    @classmethod
-    def compose(cls, stream):
-        x = stream.read('x')
-        y = stream.read('y')
-        z = stream.read('z')
-        return Vector(x, y, z)
-
-    @classmethod
-    def decompose(cls, value, stream):
-        stream.write('x', value.x)
-        stream.write('y', value.y)
-        stream.write('z', value.z)
 
 
 class StructBuilder(type):
@@ -66,7 +36,7 @@ class Struct(metaclass=StructBuilder):
 class StructModifierBase(Modifier):
 
     @classmethod
-    def compose(cls, stream):
+    def compose(cls, stream, ctx):
         struct = cls.modifies()
 
         for name in struct._fields:
@@ -76,7 +46,7 @@ class StructModifierBase(Modifier):
         return struct
 
     @classmethod
-    def decompose(cls, struct, stream):
+    def decompose(cls, struct, stream, ctx):
         for name in struct._fields:
             value = getattr(struct, name)
             stream.write(name, value)
@@ -91,26 +61,24 @@ class SomeStruct(Struct):
     score = Field(float)
     name = Field(str)
     age = Field(int)
-    position = Field(Vector)
 
 
 if __name__ == '__main__':
     # Build list of modifiers for all Struct subclasses
-    struct_modifiers = list(map(StructModifierBase.build, Struct.__subclasses__()))
-    modifiers = [VectorModifier] + struct_modifiers
+    modifiers = list(map(StructModifierBase.build, Struct.__subclasses__()))
+    modifier_manager = ModifierManager(modifiers=modifiers)
 
     # Something to serialise
     serialisable = SomeStruct()
     serialisable.score = 99.9
     serialisable.age = 12
     serialisable.name = 'Bob'
-    serialisable.position.x = 12
 
     # Write to a write_stream
-    write_stream = WriteStream(modifiers=modifiers)
+    write_stream = WriteStream(modifier_manager=modifier_manager)
+
     # We can do this (below) because we created a modifier that decomposes / composes this class
     write_stream.write('some_serialisable', serialisable)
-
     # Create stream IO with string object
     string_file = StringIO()
     stream_io_cls = JSONStreamIO
@@ -124,7 +92,7 @@ if __name__ == '__main__':
 
     # Reload from data file
     string_file.seek(0)
-    read_stream = stream_io.load(modifiers=modifiers)
+    read_stream = stream_io.load(modifier_manager=modifier_manager)
 
     # Read directly from stream
     serialisable_2 = read_stream.read('some_serialisable')
