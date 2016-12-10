@@ -24,7 +24,7 @@ class VectorModifier(Modifier):
         stream.write('z', value.z)
 
 
-class StructModifierBase(Modifier):
+class SerialisableModifierBase(Modifier):
 
     @classmethod
     def compose(cls, stream, ctx):
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     # Install modifier for the Vector class
     modifier_manager.add_modifier(VectorModifier)
     # Install modifier for the SerialisableExample class
-    modifier_manager.add_modifier(StructModifierBase.build(SerialisableExample))
+    modifier_manager.add_modifier(SerialisableModifierBase.build(SerialisableExample))
 
     # Something to serialise
     serialisable = SerialisableExample()
