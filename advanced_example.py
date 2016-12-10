@@ -70,7 +70,8 @@ if __name__ == '__main__':
     modifier_manager = ModifierManager()
     # Install modifier for the Vector class
     modifier_manager.add_modifier(VectorModifier)
-    # Install modifier for the SerialisableExample class
+    # Install modifier for the SerialisableExample class, which allows stream.write(SerialisableExample()),
+    # rather than having to use SerialisableExample().write(stream)
     modifier_manager.add_modifier(SerialisableModifierBase.build(SerialisableExample))
 
     # Something to serialise
